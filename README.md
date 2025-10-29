@@ -3,8 +3,6 @@
 **NeuroMapr** is a next-generation AI companion that transforms how students and thinkers organize, visualize, and explore knowledge.  
 It turns your **thoughts, study notes, and ideas** into **interactive mental maps** — powered by AI-driven inference, generative art, and memory visualization.
 
-> 🌐 “A visual language for your mind.”
-
 ---
 
 ## 🚀 Overview
