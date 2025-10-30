@@ -1,6 +1,7 @@
 <div align="center">
   <img src="assets/logo.png" alt="drawing" width="80"/>
-  <h1>NeuroMapr is a next-generation AI companion that transforms how students and thinkers organize, visualize, and explore knowledge.</h1>
+  <h1>NeuroMapr</h1>
+  <h2>A next-generation AI companion that transforms how students and thinkers organize, visualize, and explore knowledge.</h2>
   <p>It turns your thoughts, study notes, and ideas into interactive mental maps — powered by AI-driven inference, generative art, and memory visualization.</p>
 </div>
 
