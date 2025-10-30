@@ -1,0 +1,7 @@
+# Vultr Terraform Variables
+# Copy this file to terraform.tfvars and fill in your values
+
+vultr_api_key  = "your_vultr_api_key_here"
+region         = "ewr"  # Options: ewr (NJ), lax (LA), fra (Frankfurt), etc.
+db_password    = "your_secure_postgres_password"
+redis_password = "your_secure_redis_password"
