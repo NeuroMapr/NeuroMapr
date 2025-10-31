@@ -40,12 +40,12 @@ variable "redis_password" {
 }
 
 # PostgreSQL Managed Database
-resource "vultr_database" "neuromapor_postgres" {
+resource "vultr_database" "neuromapr_postgres" {
   database_engine         = "pg"
   database_engine_version = "16"
   region                  = var.region
   plan                    = "vultr-dbaas-startup-cc-1-55-2"
-  label                   = "neuromapor-postgres-db"
+  label                   = "neuromapr-postgres-db"
   
   maintenance_dow         = "sunday"
   maintenance_time        = "03:00"
@@ -56,12 +56,12 @@ resource "vultr_database" "neuromapor_postgres" {
 }
 
 # Valkey (Redis-compatible) Database
-resource "vultr_database" "neuromapor_valkey" {
+resource "vultr_database" "neuromapr_valkey" {
   database_engine         = "redis"
   database_engine_version = "7"
   region                  = var.region
   plan                    = "vultr-dbaas-startup-cc-1-55-2"
-  label                   = "neuromapor-valkey-cache"
+  label                   = "neuromapr-valkey-cache"
   
   maintenance_dow         = "sunday"
   maintenance_time        = "04:00"
@@ -72,62 +72,62 @@ resource "vultr_database" "neuromapor_valkey" {
 }
 
 # Object Storage
-resource "vultr_object_storage" "neuromapor_storage" {
+resource "vultr_object_storage" "neuromapr_storage" {
   cluster_id = 2 # New Jersey cluster
-  label      = "neuromapor-media-storage"
+  label      = "neuromapr-media-storage"
 }
 
 # Outputs
 output "postgres_host" {
-  value       = vultr_database.neuromapor_postgres.host
+  value       = vultr_database.neuromapr_postgres.host
   description = "PostgreSQL database host"
 }
 
 output "postgres_port" {
-  value       = vultr_database.neuromapor_postgres.port
+  value       = vultr_database.neuromapr_postgres.port
   description = "PostgreSQL database port"
 }
 
 output "postgres_user" {
-  value       = vultr_database.neuromapor_postgres.user
+  value       = vultr_database.neuromapr_postgres.user
   description = "PostgreSQL database user"
 }
 
 output "postgres_password" {
-  value       = vultr_database.neuromapor_postgres.password
+  value       = vultr_database.neuromapr_postgres.password
   description = "PostgreSQL database password"
   sensitive   = true
 }
 
 output "valkey_host" {
-  value       = vultr_database.neuromapor_valkey.host
+  value       = vultr_database.neuromapr_valkey.host
   description = "Valkey (Redis) host"
 }
 
 output "valkey_port" {
-  value       = vultr_database.neuromapor_valkey.port
+  value       = vultr_database.neuromapr_valkey.port
   description = "Valkey (Redis) port"
 }
 
 output "valkey_password" {
-  value       = vultr_database.neuromapor_valkey.password
+  value       = vultr_database.neuromapr_valkey.password
   description = "Valkey (Redis) password"
   sensitive   = true
 }
 
 output "s3_endpoint" {
-  value       = vultr_object_storage.neuromapor_storage.s3_hostname
+  value       = vultr_object_storage.neuromapr_storage.s3_hostname
   description = "Object Storage S3 endpoint"
 }
 
 output "s3_access_key" {
-  value       = vultr_object_storage.neuromapor_storage.s3_access_key
+  value       = vultr_object_storage.neuromapr_storage.s3_access_key
   description = "Object Storage access key"
   sensitive   = true
 }
 
 output "s3_secret_key" {
-  value       = vultr_object_storage.neuromapor_storage.s3_secret_key
+  value       = vultr_object_storage.neuromapr_storage.s3_secret_key
   description = "Object Storage secret key"
   sensitive   = true
 }
