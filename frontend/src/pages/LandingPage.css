@@ -1,0 +1,108 @@
+.landing-container {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  background: white;
+}
+
+.hint {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.85);
+  border-radius: 10px;
+  font: 12px/1.2 system-ui, sans-serif;
+  color: #333;
+}
+/* src/pages/LandingPage.css */
+.landing-container { width: 100%; height: 100vh; position: relative; overflow: hidden; background:#000; }
+.hint { position:absolute; left:12px; bottom:12px; padding:8px 10px; background:rgba(255,255,255,.85); border-radius:10px; font:12px system-ui,sans-serif; color:#333; }
+.landing-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.overlay-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #ffffff;
+  text-align: center;
+  font-family: 'Poppins', sans-serif;
+  z-index: 10;
+  pointer-events: none; /* lets you interact with the 3D scene */
+}
+
+.title {
+  font-size: 3.5rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-shadow: 0 0 20px #b388ff;
+}
+
+.subtitle {
+  margin-top: 10px;
+  font-size: 1.3rem;
+  font-weight: 300;
+  color: #dcdcdc;
+  text-shadow: 0 0 10px rgba(255,255,255,0.3);
+}
+/* Make the 3D mount fill the screen and allow absolutely-positioned overlays */
+.landing-container{
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background: #000;           /* black bg */
+  overflow: hidden;
+}
+
+/* Canvas should not add margins */
+.landing-container canvas{ display:block; }
+
+/* Centered overlay text above the canvas */
+.overlay-text{
+  position: absolute;
+  inset: 0;                   /* top/right/bottom/left: 0 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: 10;                /* above the WebGL canvas */
+  pointer-events: none;       /* keep orbit controls working */
+  color: #fff;
+}
+
+.title{
+  margin: 0;
+  font-size: clamp(28px, 6vw, 64px);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-shadow: 0 0 18px #b388ff, 0 0 4px rgba(255,255,255,.6);
+}
+
+.subtitle{
+  margin-top: 10px;
+  font-size: clamp(14px, 2.2vw, 22px);
+  font-weight: 300;
+  color: #dcdcdc;
+  text-shadow: 0 0 8px rgba(255,255,255,.35);
+}
+
+/* Keep your hint readable but subtle */
+.hint{
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  background: rgba(255,255,255,.85);
+  color: #333;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font: 12px/1.2 system-ui, sans-serif;
+  z-index: 11;                /* above canvas */
+}
