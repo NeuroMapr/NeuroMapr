@@ -14,7 +14,7 @@ const redis = require('redis');
 const postgresConfig = {
     host: process.env.VULTR_DB_HOST,
     port: process.env.VULTR_DB_PORT || 16751,
-    database: process.env.VULTR_DB_NAME || 'neuromapor_db',
+    database: process.env.VULTR_DB_NAME || 'neuromapr_db',
     user: process.env.VULTR_DB_USER,
     password: process.env.VULTR_DB_PASSWORD,
     ssl: process.env.VULTR_DB_SSL === 'true' ? {
@@ -59,6 +59,8 @@ const redisConfig = {
     socket: {
         host: process.env.VULTR_REDIS_HOST,
         port: process.env.VULTR_REDIS_PORT || 16752,
+        tls: true, // Vultr managed databases require TLS
+        rejectUnauthorized: false, // Accept self-signed certificates
     },
     password: process.env.VULTR_REDIS_PASSWORD,
 };
@@ -138,5 +140,5 @@ module.exports = {
     createS3Client,
     createRedisClient,
     testConnections,
-    bucketName: process.env.VULTR_S3_BUCKET || 'neuromapor-assets',
+    bucketName: process.env.VULTR_S3_BUCKET || 'neuromapr-assets',
 };

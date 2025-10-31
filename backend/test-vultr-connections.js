@@ -46,9 +46,9 @@ async function runTests() {
             const result = await databaseService.query('SELECT NOW() as current_time');
             console.log('✅ Database query test:', result.rows[0]);
 
-            // Note: Uncomment below to initialize schema (only run once!)
-            // await databaseService.initializeSchema();
-            // console.log('✅ Database schema initialized');
+            // Initialize schema (only run once!)
+            await databaseService.initializeSchema();
+            console.log('✅ Database schema initialized');
 
         } catch (error) {
             console.error('❌ Database service test failed:', error.message);
