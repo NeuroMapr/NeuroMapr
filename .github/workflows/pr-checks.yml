@@ -1,0 +1,113 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pr-validation:
+    name: PR Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check PR title format
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          echo "PR Title: $PR_TITLE"
+          
+          # Check if title follows conventional commits format
+          if [[ ! "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|test|chore|perf)(\(.+\))?: ]]; then
+            echo "❌ PR title should follow format: type(scope): description"
+            echo "Examples:"
+            echo "  - feat(api): add rate limiting"
+            echo "  - fix(database): resolve connection timeout"
+            echo "  - docs(readme): update setup instructions"
+            exit 1
+          fi
+          echo "✅ PR title format is valid"
+
+      - name: Check PR description
+        run: |
+          PR_BODY="${{ github.event.pull_request.body }}"
+          
+          if [ -z "$PR_BODY" ]; then
+            echo "⚠️  PR description is empty. Please add a description."
+            exit 1
+          fi
+          
+          echo "✅ PR has a description"
+
+      - name: Check for breaking changes
+        run: |
+          PR_BODY="${{ github.event.pull_request.body }}"
+          
+          if [[ "$PR_BODY" == *"BREAKING CHANGE"* ]]; then
+            echo "⚠️  This PR contains breaking changes!"
+            echo "Make sure to:"
+            echo "  1. Update API documentation"
+            echo "  2. Notify team members"
+            echo "  3. Update version number"
+          fi
+
+      - name: Check file changes
+        run: |
+          echo "Files changed in this PR:"
+          git diff --name-only origin/${{ github.base_ref }}...HEAD
+          
+          # Check if .env is accidentally committed
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q "^backend/.env$"; then
+            echo "❌ ERROR: .env file should not be committed!"
+            exit 1
+          fi
+          
+          echo "✅ No sensitive files committed"
+
+  size-check:
+    name: PR Size Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check PR size
+        run: |
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | wc -l)
+          CHANGED_LINES=$(git diff --stat origin/${{ github.base_ref }}...HEAD | tail -1 | awk '{print $4+$6}')
+          
+          echo "Files changed: $CHANGED_FILES"
+          echo "Lines changed: $CHANGED_LINES"
+          
+          if [ "$CHANGED_FILES" -gt 20 ]; then
+            echo "⚠️  This PR changes $CHANGED_FILES files. Consider splitting into smaller PRs."
+          fi
+          
+          if [ "$CHANGED_LINES" -gt 500 ]; then
+            echo "⚠️  This PR changes $CHANGED_LINES lines. Consider splitting into smaller PRs."
+          fi
+
+  conflict-check:
+    name: Merge Conflict Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for merge conflicts
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          
+          if git merge-tree $(git merge-base HEAD origin/${{ github.base_ref }}) HEAD origin/${{ github.base_ref }} | grep -q "<<<<<"; then
+            echo "❌ This PR has merge conflicts with ${{ github.base_ref }}"
+            exit 1
+          fi
+          
+          echo "✅ No merge conflicts detected"

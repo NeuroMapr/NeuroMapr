@@ -4,7 +4,11 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "check": "node --check src/index.js",
+    "check:all": "find src -name '*.js' -exec node --check {} \\;",
+    "audit": "npm audit --audit-level=moderate",
+    "test:connections": "node test-vultr-connections.js"
   },
   "keywords": [],
   "author": "",
