@@ -3,9 +3,13 @@ const express = require('express');
 const router = express.Router();
 const db = require('../services/databaseService');
 const cache = require('../services/cacheService');
+const {
+    validateMapCreation,
+    validateUUID
+} = require('../middleware/validator');
 
 // Create a new map
-router.post('/', async (req, res) => {
+router.post('/', validateMapCreation, async (req, res) => {
     try {
         const {
             userId,
@@ -34,7 +38,7 @@ router.post('/', async (req, res) => {
 });
 
 // Get map by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', validateUUID, async (req, res) => {
     try {
         const {
             id
@@ -84,7 +88,7 @@ router.get('/user/:userId', async (req, res) => {
 });
 
 // Update map
-router.put('/:id', async (req, res) => {
+router.put('/:id', validateUUID, async (req, res) => {
     try {
         const {
             id
@@ -127,7 +131,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete map
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', validateUUID, async (req, res) => {
     try {
         const {
             id

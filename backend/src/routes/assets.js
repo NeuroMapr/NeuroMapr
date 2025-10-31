@@ -3,6 +3,9 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const storage = require('../services/storageService');
+const {
+    validateFileUpload
+} = require('../middleware/validator');
 
 // Configure multer for memory storage
 const upload = multer({
@@ -13,7 +16,7 @@ const upload = multer({
 });
 
 // Upload artwork for a node
-router.post('/artwork/:nodeId', upload.single('artwork'), async (req, res) => {
+router.post('/artwork/:nodeId', upload.single('artwork'), validateFileUpload, async (req, res) => {
     try {
         const {
             nodeId
@@ -43,7 +46,7 @@ router.post('/artwork/:nodeId', upload.single('artwork'), async (req, res) => {
 });
 
 // Upload narration for a node
-router.post('/narration/:nodeId', upload.single('narration'), async (req, res) => {
+router.post('/narration/:nodeId', upload.single('narration'), validateFileUpload, async (req, res) => {
     try {
         const {
             nodeId
@@ -70,7 +73,7 @@ router.post('/narration/:nodeId', upload.single('narration'), async (req, res) =
 });
 
 // Upload thumbnail for a map
-router.post('/thumbnail/:mapId', upload.single('thumbnail'), async (req, res) => {
+router.post('/thumbnail/:mapId', upload.single('thumbnail'), validateFileUpload, async (req, res) => {
     try {
         const {
             mapId
@@ -97,7 +100,7 @@ router.post('/thumbnail/:mapId', upload.single('thumbnail'), async (req, res) =>
 });
 
 // Generic file upload
-router.post('/upload', upload.single('file'), async (req, res) => {
+router.post('/upload', upload.single('file'), validateFileUpload, async (req, res) => {
     try {
         const {
             key,
