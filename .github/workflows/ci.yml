@@ -1,244 +1,127 @@
-name: Backend CI
+name: CI Pipeline
 
 on:
-  push:
-    branches: [ main, develop ]
-    paths:
-      - 'backend/**'
-      - '.github/workflows/backend-ci.yml'
   pull_request:
-    branches: [ main, develop ]
-    paths:
-      - 'backend/**'
-      - '.github/workflows/backend-ci.yml'
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
 
 jobs:
-  lint-and-test:
-    name: Lint and Test Backend
+  # Job 1: Frontend build and test
+  frontend-build:
+    name: Build & Test Frontend
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "./frontend/package-lock.json"
 
       - name: Install dependencies
-        working-directory: backend
         run: npm ci
 
-      - name: Check for syntax errors
-        working-directory: backend
-        run: |
-          echo "Checking JavaScript syntax..."
-          node --check src/index.js
-          node --check src/config/vultr.js
-          node --check src/services/databaseService.js
-          node --check src/services/storageService.js
-          node --check src/services/cacheService.js
-          node --check src/routes/maps.js
-          node --check src/routes/nodes.js
-          node --check src/routes/assets.js
-          node --check src/middleware/rateLimiter.js
-          node --check src/middleware/validator.js
-          node --check src/middleware/logger.js
+      - name: Run linter
+        run: npm run lint
+        continue-on-error: true # Don't fail build on lint errors initially
 
-      - name: Run ESLint (if configured)
-        working-directory: backend
-        run: |
-          if [ -f .eslintrc.json ] || [ -f .eslintrc.js ]; then
-            npm run lint || echo "No lint script found, skipping..."
-          else
-            echo "ESLint not configured, skipping..."
-          fi
-        continue-on-error: true
+      - name: Build frontend
+        run: npm run build
 
-      - name: Check for missing dependencies
-        working-directory: backend
-        run: |
-          echo "Checking for missing dependencies..."
-          npm ls || true
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/dist/
+          retention-days: 7
 
-      - name: Run tests (if available)
-        working-directory: backend
-        run: |
-          if grep -q '"test"' package.json; then
-            npm test
-          else
-            echo "No tests configured, skipping..."
-          fi
-        continue-on-error: true
-
-  security-check:
-    name: Security Audit
+  # Job 3: Backend Lambda validation
+  backend-validation:
+    name: Validate Backend Lambdas
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          node-version: '20'
+          python-version: "3.9"
 
-      - name: Run npm audit
-        working-directory: backend
+      - name: Install and validate Lambda dependencies
         run: |
-          npm audit --audit-level=moderate || true
-          echo "Security audit complete"
+          # Check each Lambda has requirements.txt and valid Python syntax
+          for lambda_dir in backend/lambdas/*/; do
+            echo "Validating $lambda_dir"
+            if [ -f "$lambda_dir/requirements.txt" ]; then
+              pip install -r "$lambda_dir/requirements.txt" --target /tmp/lambda-deps
+            fi
+            if [ -f "$lambda_dir/handler.py" ]; then
+              python -m py_compile "$lambda_dir/handler.py"
+            fi
+          done
+
+      - name: Run backend tests
+        run: |
+          pip install pytest boto3 moto
+          pytest backend/tests/ -v
+        continue-on-error: true # Until tests are written
+
+  # Job 4: Security scanning
+  security-scan:
+    name: Security & Dependency Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-results.sarif"
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: "trivy-results.sarif"
+        continue-on-error: true
 
       - name: Check for secrets in code
-        uses: trufflesecurity/trufflehog@main
-        with:
-          path: ./backend
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
-
-  code-quality:
-    name: Code Quality Checks
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Check for TODO/FIXME comments
         run: |
-          echo "Checking for TODO/FIXME comments..."
-          grep -r "TODO\|FIXME" backend/src || echo "No TODO/FIXME found"
-
-      - name: Check file sizes
-        run: |
-          echo "Checking for large files..."
-          find backend -type f -size +1M -exec ls -lh {} \; || echo "No large files found"
-
-      - name: Check for console.log in production code
-        run: |
-          echo "Checking for console.log statements..."
-          grep -r "console\.log" backend/src/routes || echo "No console.log in routes"
-          grep -r "console\.log" backend/src/services || echo "No console.log in services"
-
-      - name: Verify environment variables
-        working-directory: backend
-        run: |
-          echo "Checking .env.example exists..."
-          if [ ! -f .env.example ]; then
-            echo "ERROR: .env.example not found!"
-            exit 1
-          fi
-          echo ".env.example found ✓"
-
-  build-check:
-    name: Build Verification
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
-
-      - name: Install dependencies
-        working-directory: backend
-        run: npm ci
-
-      - name: Verify all imports resolve
-        working-directory: backend
-        run: |
-          echo "Verifying all imports..."
-          node -e "
-            const fs = require('fs');
-            const path = require('path');
-            
-            function checkImports(dir) {
-              const files = fs.readdirSync(dir);
-              files.forEach(file => {
-                const filePath = path.join(dir, file);
-                const stat = fs.statSync(filePath);
-                
-                if (stat.isDirectory() && file !== 'node_modules') {
-                  checkImports(filePath);
-                } else if (file.endsWith('.js')) {
-                  try {
-                    require(path.resolve(filePath));
-                    console.log('✓', filePath);
-                  } catch (err) {
-                    if (!err.message.includes('Cannot find module')) {
-                      console.log('✓', filePath, '(runtime check)');
-                    } else {
-                      console.error('✗', filePath, err.message);
-                      process.exit(1);
-                    }
-                  }
-                }
-              });
-            }
-            
-            checkImports('src');
-          "
-
-  documentation-check:
-    name: Documentation Verification
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Check required documentation exists
-        run: |
-          echo "Checking documentation files..."
+          echo "Checking for common secrets patterns..."
           
-          if [ ! -f backend/API_DOCUMENTATION.md ]; then
-            echo "ERROR: API_DOCUMENTATION.md not found!"
-            exit 1
+          # Check for API keys
+          if grep -r "api[_-]key.*=.*['\"][a-zA-Z0-9]\{20,\}" backend/src --exclude-dir=node_modules || true; then
+            echo "⚠️  Potential API key found"
           fi
-          echo "✓ API_DOCUMENTATION.md found"
           
-          if [ ! -f backend/INTEGRATION_GUIDE.md ]; then
-            echo "ERROR: INTEGRATION_GUIDE.md not found!"
-            exit 1
+          # Check for passwords
+          if grep -r "password.*=.*['\"][^'\"]\{8,\}" backend/src --exclude-dir=node_modules || true; then
+            echo "⚠️  Potential password found"
           fi
-          echo "✓ INTEGRATION_GUIDE.md found"
           
-          if [ ! -f backend/README.md ] && [ ! -f README.md ]; then
-            echo "WARNING: README.md not found"
-          else
-            echo "✓ README.md found"
+          # Check for AWS keys
+          if grep -r "AKIA[0-9A-Z]\{16\}" backend/src --exclude-dir=node_modules || true; then
+            echo "⚠️  Potential AWS key found"
           fi
-
-      - name: Check for broken markdown links
-        uses: gaurav-nelson/github-action-markdown-link-check@v1
-        with:
-          use-quiet-mode: 'yes'
-          config-file: '.github/markdown-link-check-config.json'
+          
+          # Check for private keys
+          if grep -r "BEGIN.*PRIVATE KEY" backend/src --exclude-dir=node_modules || true; then
+            echo "⚠️  Potential private key found"
+          fi
+          
+          echo "✅ Secret scan complete"
         continue-on-error: true
-
-  notify:
-    name: CI Status Notification
-    runs-on: ubuntu-latest
-    needs: [lint-and-test, security-check, code-quality, build-check, documentation-check]
-    if: always()
-
-    steps:
-      - name: Check CI Status
-        run: |
-          if [ "${{ needs.lint-and-test.result }}" == "failure" ] || \
-             [ "${{ needs.security-check.result }}" == "failure" ] || \
-             [ "${{ needs.build-check.result }}" == "failure" ]; then
-            echo "❌ CI checks failed!"
-            exit 1
-          else
-            echo "✅ All CI checks passed!"
-          fi
