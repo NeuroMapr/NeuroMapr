@@ -1,0 +1,25 @@
+application "neuromapr" {
+
+  service "api-gateway" {
+    visibility = "public"
+  }
+
+  service "graph-processor" {
+    visibility = "private"
+  }
+
+  service "media-generator" {
+    visibility = "private"
+  }
+
+  service "memory-manager" {
+    visibility = "private"
+  }
+
+  smartsql "concept-graph-db" {}
+
+  smartbucket "node-media-storage" {}
+
+  smartmemory "user-sessions" {}
+
+}
