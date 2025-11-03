@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__raindrop-mcp__get-prompt",
+      "Bash(raindrop auth login:*)",
+      "Bash(raindrop auth:*)",
+      "mcp__raindrop-mcp__update-state",
+      "mcp__raindrop-mcp__list_documentation_pages",
+      "mcp__raindrop-mcp__list_architecture_patterns",
+      "mcp__raindrop-mcp__fetch_documentation_page",
+      "mcp__raindrop-mcp__fetch_architecture_pattern",
+      "Bash(raindrop build:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
