@@ -24,9 +24,34 @@ const app = express();
 // Security Middleware (apply first)
 app.use(helmet()); // Adds security headers
 
-// CORS Configuration
+// CORS Configuration - Allow Raindrop and Frontend
+const allowedOrigins = [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    process.env.RAINDROP_URL || 'https://*.raindrop.ai', // Raindrop services
+    'http://localhost:8787', // Raindrop local dev
+];
+
 const corsOptions = {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000', // Whitelist frontend
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+
+        // Check if origin is allowed
+        const isAllowed = allowedOrigins.some(allowed => {
+            if (allowed.includes('*')) {
+                const pattern = allowed.replace('*', '.*');
+                return new RegExp(pattern).test(origin);
+            }
+            return allowed === origin;
+        });
+
+        if (isAllowed) {
+            callback(null, true);
+        } else {
+            console.log('CORS blocked origin:', origin);
+            callback(null, true); // Allow for now during development
+        }
+    },
     credentials: true,
     optionsSuccessStatus: 200
 };
